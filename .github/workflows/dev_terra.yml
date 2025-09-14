@@ -1,3 +1,4 @@
+
 name: Dev env infra
 
 on:
@@ -41,7 +42,16 @@ jobs:
         id: plan
         run: |
           set -o pipefail
-          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" | tee /dev/stderr 
+          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan | tee /dev/sterr
+          terraform show -no-color tfplan-${{ github.run_id }}.tfplan > env/dev/tfplan-${{ github.run_id }}.tfplan
+
+      - name: iploaf terraform plan artifact
+        uses: actions/upload-artifacts@v3
+        with: 
+           name: terraform-plan-dev-${{ github.run_id }}
+           path: env/dev/tfplan-${{ github.run_id }}.tfplan
+           retention-days: 1
+           if-no-files-found: ignore 
 
       - name: Raise PR after successful Terraform plan
         if: success()
@@ -59,3 +69,5 @@ jobs:
             - Workflow: ${{ github.workflow }}
             - Run ID: ${{ github.run_id }}
           base: main
+          exclude: |
+            env/dev/.terraform/**

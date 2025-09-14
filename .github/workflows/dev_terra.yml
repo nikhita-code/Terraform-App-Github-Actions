@@ -34,3 +34,8 @@ jobs:
         run: |
              set -o pipefail
              terraform -chdir=env/dev init -input=false | tee /dev/stdout
+
+      - name: Terraform plan
+        run: |
+              set -o pipefail
+              terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" | tee /dev/stderr 

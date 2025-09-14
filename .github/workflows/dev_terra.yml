@@ -46,7 +46,7 @@ jobs:
           terraform show -no-color tfplan-${{ github.run_id }}.tfplan > env/dev/tfplan-${{ github.run_id }}.tfplan
 
       - name: iploaf terraform plan artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with: 
            name: terraform-plan-dev-${{ github.run_id }}
            path: env/dev/tfplan-${{ github.run_id }}.tfplan

@@ -48,11 +48,10 @@ jobs:
 
           # Generate binary plan
           terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=$PLAN_FILE -detailed-exitcode || exit_code=$?
-
-          # Fail if plan fails unexpectedly
+          
           if [ "${exit_code:-0}" != "0" ] && [ "${exit_code:-0}" != "2" ]; then
-            echo "Terraform plan failed!"
-            terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars"
+            echo "Terraform plan failed with exit code: $exit_code"
+            terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -no-color
             exit $exit_code
           fi
 

@@ -196,7 +196,7 @@ resource "aws_secretsmanager_secret_version" "rds_cred_value" {
 }
 
 resource "aws_s3_bucket" "s3_bucket" {
-   name = var.bucket_name
+   bucket = var.bucket_name
 }
 
 
@@ -221,7 +221,7 @@ resource "aws_instance" "my_ec2" {
 }
 
 
-resource "aws_ecr_respository" "ecr_repo" {
+resource "aws_ecr_repository" "ecr_repo" {
      name = var.ecr_repo_name
      image_scanning_configuration {
        scan_on_push = true

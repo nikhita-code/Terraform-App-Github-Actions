@@ -1,4 +1,4 @@
-
+/*
 #VPC
 vpc_cidr = "10.0.0.0/16" 
 public_cidr = "10.0.1.0/24"
@@ -25,3 +25,4 @@ bucket_name = "aws-s3-145"
 
 #ecr_repo_name
 ecr_repo_name = "nodejs-app" 
+*/

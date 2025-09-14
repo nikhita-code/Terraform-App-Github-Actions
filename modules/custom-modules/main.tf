@@ -196,7 +196,7 @@ resource "aws_secretsmanager_secret_version" "rds_cred_value" {
 }
 
 resource "aws_s3_bucket" "s3_bucket" {
-   name = var.s3_bucket_name
+   name = var.bucket_name
 }
 
 

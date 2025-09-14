@@ -36,5 +36,10 @@ module "custom_modules" {
   role_name             = var.role_name
   instance_profile_name = var.instance_profile_name
 
+#s3-bucket
+bucket_name = var.bucket_name
+
+#ecr
+ecr_repo_name = var.ecr_repo_name
 
 }

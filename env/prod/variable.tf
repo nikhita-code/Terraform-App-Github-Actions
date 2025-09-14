@@ -1,3 +1,4 @@
+
 variable "name" {
   type = string
   default =  "vpc-head"
@@ -124,4 +125,13 @@ variable "instance_type" {
 
 variable "key_pair_nm" {
    type = string
+}
+
+
+variable "ecr_repo_name" {
+   type = string
+}
+
+variable "bucket_name" {
+   type = string 
 }

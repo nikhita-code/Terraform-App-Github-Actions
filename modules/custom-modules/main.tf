@@ -195,17 +195,9 @@ resource "aws_secretsmanager_secret_version" "rds_cred_value" {
     })
 }
 
-/*
-resource "aws_eip" "ec2_eip" {
-  vpc = true
+resource "aws_s3_bucket" "s3_bucket" {
+   name = var.s3_bucket_name
 }
-
-resource "aws_eip_association" "ec2_eip_assoc" {
-  instance_id   = aws_instance.my_ec2.id   # replace with your EC2 resource name
-  allocation_id = aws_eip.ec2_eip.id
-}
-
-*/
 
 
 #Module - EC2 instance

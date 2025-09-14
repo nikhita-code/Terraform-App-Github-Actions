@@ -1,5 +1,4 @@
 
-
 name: Dev env infra
 
 on:
@@ -39,35 +38,19 @@ jobs:
           set -o pipefail
           terraform -chdir=env/dev init -input=false | tee /dev/stdout
 
-   # - name: Terraform Plan
-    #    id: plan
-     #   run: |
-      #    set -o pipefail
-       #   terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan -detailed-exitcode || exit_code=$?
-        #  if [ "${exit_code:-0}" != "0" ] && [ "${exit_code:-0}" != "2" ]; then
-        #     echo "Terraform plan failed!"
-        #     exit $exit_code
-         # fi
-         # terraform show -no-color tfplan-${{ github.run_id }}.tfplan > env/dev/tfplan-${{ github.run_id }}.tfplan */
-          
-        #  terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan | tee /dev/sterr
       - name: Terraform Plan
         id: plan
         run: |
           set -o pipefail
-          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan -detailed-exitcode || exit_code=$?
-          if [ "${exit_code:-0}" != "0" ] && [ "${exit_code:-0}" != "2" ]; then
-             echo "Terraform plan failed!"
-             terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" # rerun to show errors
-             exit $exit_code
-          fi
-          terraform show -no-color tfplan-${{ github.run_id }}.tfplan > env/dev/tfplan-${{ github.run_id }}.tfplan
+          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan.binary | tee /dev/stderr
+          terraform show -no-color tfplan.binary > env/dev/tfplan.txt
+         
 
       - name: upload terraform plan artifact
         uses: actions/upload-artifact@v4
         with: 
            name: terraform-plan-dev-${{ github.run_id }}
-           path: env/dev/tfplan-${{ github.run_id }}.tfplan
+           path: env/dev/tfplan.txt
            retention-days: 1
            if-no-files-found: ignore 
 

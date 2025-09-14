@@ -31,4 +31,6 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform -chdir=env/dev init -input=false | tee /dev/stdout
+        run: |
+             set -o pipefail
+             terraform -chdir=env/dev init -input=false | tee /dev/stdout

@@ -127,3 +127,7 @@ variable "instance_type" {
 variable "key_pair_nm" {
    type = string
 }
+
+variable "ecr_repo_name" {
+   type = string
+}

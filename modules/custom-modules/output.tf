@@ -38,5 +38,14 @@ output "secret_manager_secret_arn" {
 } 
 
 output "ecr_repo_url" {
-   value = 
+   value = aws_ecr_repository.ecr_repo.repository_url
 }
+
+output "ecr_repository_name" {
+   value = aws_ecr_repository.ecr_repo.name
+}
+
+
+
+
+

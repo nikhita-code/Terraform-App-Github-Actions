@@ -4,10 +4,9 @@ on:
   push:
     branches:
       - dev
- #     - main
-#  pull_request:
-  #    branches:
-   #   - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   terraform-dev:
@@ -32,10 +31,24 @@ jobs:
 
       - name: Terraform Init
         run: |
-             set -o pipefail
-             terraform -chdir=env/dev init -input=false | tee /dev/stdout
+          set -o pipefail
+          terraform -chdir=env/dev init -input=false | tee /dev/stdout
 
-      - name: Terraform plan
+      - name: Terraform Plan
         run: |
-              set -o pipefail
-              terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" | tee /dev/stderr 
+          set -o pipefail
+          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" | tee /dev/stderr 
+
+      - name: Raise PR after successful Terraform plan
+        uses: peter-evans/create-pull-request@v6
+        with: 
+          commit-message: "Terraform apply request for dev"
+          branch: infra/dev-plan-${{ github.run_id }}
+          title: "Terraform Apply PR (Dev → Main)"
+          body: |
+            Terraform plan completed successfully.
+            Please review before merging to `main` for apply.
+
+            - Workflow: ${{ github.workflow }}
+            - Run ID: ${{ github.run_id }}
+          base: main

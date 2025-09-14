@@ -42,8 +42,14 @@ jobs:
         id: plan
         run: |
           set -o pipefail
-          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan | tee /dev/sterr
+          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan -detailed-exitcode || exit_code=$?
+          if [ "${exit_code:-0}" != "0" ] && [ "${exit_code:-0}" != "2" ]; then
+             echo "Terraform plan failed!"
+             exit $exit_code
+          fi
           terraform show -no-color tfplan-${{ github.run_id }}.tfplan > env/dev/tfplan-${{ github.run_id }}.tfplan
+        #  terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}.tfplan | tee /dev/sterr
+     
 
       - name: iploaf terraform plan artifact
         uses: actions/upload-artifact@v4

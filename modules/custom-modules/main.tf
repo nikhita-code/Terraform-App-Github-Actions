@@ -228,12 +228,10 @@ resource "aws_instance" "my_ec2" {
       E0F
 }
 
-#Moodule - Bastion instance
-/*resource "aws_instance" "ec2_instance" {
-   ami = var.ami
-   instance_type = var.instance_type
-   iam_instance_profile = var.instance_profile_name
-   key_name  = var.key_pair_nm
-   subnet_id = var.public_subnet_id
-   vpc_security_group_ids = var.vpc_security_group_ids
-}*/
+
+resource "aws_ecr_respository" "ecr_repo" {
+     name = var.ecr_repo_name
+}
+
+
+

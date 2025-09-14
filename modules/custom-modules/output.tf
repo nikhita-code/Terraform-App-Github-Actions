@@ -36,3 +36,7 @@ output "instance_profile_name" {
 output "secret_manager_secret_arn" {
   value = aws_secretsmanager_secret.rds_credentials.arn
 } 
+
+output "ecr_repo_url" {
+   value = 
+}

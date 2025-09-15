@@ -8,4 +8,5 @@ resource "aws_instance" "my_ec2" {
     instance_type = var.instance_type
     key_name  = var.key_pair_nm
     vpc_id = var.vpc_id
+    subnet_id     = var.subnet_id 
 }

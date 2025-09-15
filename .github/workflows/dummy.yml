@@ -1,24 +1,26 @@
-name: Dev Env Infra
+
+name: Dev env infra
 
 on:
   push:
     branches:
       - dev
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   terraform-dev:
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
 
-    steps:
-      # 1️⃣ Checkout repo
+    steps: 
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -26,66 +28,43 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 3️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
 
-      # 4️⃣ Terraform Init
       - name: Terraform Init
         run: |
           set -o pipefail
           terraform -chdir=env/dev init -input=false | tee /dev/stdout
 
-      # 5️⃣ Terraform Plan (binary + readable)
       - name: Terraform Plan
         id: plan
         run: |
           set -o pipefail
-          PLAN_FILE=tfplan-${{ github.run_id }}.tfplan
-          PLAN_TXT=tfplan-${{ github.run_id }}.txt
+          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
+         
 
-          # Generate binary plan
-          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=$PLAN_FILE -detailed-exitcode || exit_code=$?
-          
-          if [ "${exit_code:-0}" != "0" ] && [ "${exit_code:-0}" != "2" ]; then
-            echo "Terraform plan failed with exit code: $exit_code"
-            terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -no-color
-            exit $exit_code
-          fi
-
-          # Generate human-readable plan for PR review
-          terraform show -no-color $PLAN_FILE > env/dev/$PLAN_TXT
-
-      # 6️⃣ Upload Terraform artifacts (binary + readable)
-      - name: Upload Terraform plan artifacts
+      - name: upload terraform plan artifact
         uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan-dev-${{ github.run_id }}
-          path: |
-            env/dev/tfplan-${{ github.run_id }}.tfplan
-            env/dev/tfplan-${{ github.run_id }}.txt
-          retention-days: 1
-          if-no-files-found: ignore
+        with: 
+           name: terraform-plan-dev-${{ github.run_id }}
+           path: env/dev/tfplan
+           retention-days: 1
+           if-no-files-found: ignore 
 
-      # 7️⃣ Raise PR to main with readable plan
       - name: Raise PR after successful Terraform plan
         if: success()
         uses: peter-evans/create-pull-request@v6
-        with:
+        with: 
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Terraform apply request for dev"
           branch: infra/dev-plan-${{ github.run_id }}
           delete-branch: true
           title: "Terraform Apply PR (Dev → Main)"
           body: |
-            Terraform plan completed successfully. Please review before merging to `main`.
-
-            **Plan Preview:**
-            ```
-            $(cat env/dev/tfplan-${{ github.run_id }}.txt)
-            ```
+            Terraform plan completed successfully.
+            Please review before merging to `main` for apply.
 
             - Workflow: ${{ github.workflow }}
             - Run ID: ${{ github.run_id }}

@@ -85,7 +85,11 @@ jobs:
             - Workflow: ${{ github.workflow }}
             - Run ID: ${{ github.run_id }}
           base: main
-      
+          add=paths:
+            env/dev/*.tf
+            env/dev/*.tfvars
+
+          
   terraform-apply:
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest

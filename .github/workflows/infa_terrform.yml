@@ -1,0 +1,68 @@
+name: Dev env infra
+ 
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      tf_actions_working_dir: env/dev
+    
+    defaults:
+       run: 
+         shell: bash
+         working-directory: ./env/dev
+
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        id: init
+        run: terraform  init 
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var-file="dev.tfvars" -out=tfplan
+
+      - name: Upload Terraform plan artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: terraform-plan-dev
+          path: env/dev/tfplan
+          retention-days: 1
+          if-no-files-found: ignore 
+          
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Terraform changes"
+          branch: dev
+          base: main
+          title: "Terraform Plan results from dev"
+          body: |
+            This PR was automatically created by GitHub Actions.
+            It contains Terraform changes from the `dev` branch.
+          add-paths: |
+              env/dev/*.tf
+              env/dev/*.tfvars

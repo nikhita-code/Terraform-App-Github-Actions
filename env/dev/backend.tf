@@ -1,5 +1,5 @@
 
-
+/*
 terraform {
   backend "s3" {
     bucket = "pineapplebucket1234"
@@ -7,3 +7,4 @@ terraform {
     region = "us-east-1"
   }
 }
+*/

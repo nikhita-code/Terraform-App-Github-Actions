@@ -24,3 +24,4 @@ bucket_name = "aws-s3-1456"
 
 #ecr_repo_name
 ecr_repo_name = "nodejs-app"
+

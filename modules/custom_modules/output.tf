@@ -1,5 +1,6 @@
 
 
+
 output "vpc_id" {
   value =  aws_vpc.vpc_main.id
 }
@@ -49,7 +50,3 @@ output "ecr_repository_name" {
 output "s3_bucket_name" {
   value = aws_s3_bucket.s3_bucket.bucket
 }
-
-
-
-

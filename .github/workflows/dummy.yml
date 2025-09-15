@@ -1,0 +1,122 @@
+name: Dev env infra
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # allows manual destroy
+
+jobs:
+  terraform-plan:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform -chdir=env/dev init -input=false
+
+      - name: Terraform Plan
+        run: terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
+
+      - name: Raise PR after successful Terraform plan
+        if: success()
+        uses: peter-evans/create-pull-request@v6
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Terraform apply request for dev"
+          branch: infra/dev-plan-${{ github.run_id }}
+          title: "Terraform Apply PR (Dev → Main)"
+          body: |
+            Terraform plan completed successfully.
+            Please review before merging to `main` for apply.
+          base: main
+          add-paths: |
+            env/dev/*.tf
+            env/dev/*.tfvars
+          allow-empty-commit: true # ensures PR is created even if no new commits
+
+  terraform-apply:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+   
+      # Configure required reviewers in GitHub environment settings
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform -chdir=env/dev init -input=false
+
+      - name: Terraform Plan (re-run in main before apply)
+        run: terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform -chdir=env/dev apply -input=false tfplan
+
+  terraform-destroy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+      # Require manual approval in environment settings
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform -chdir=env/dev init -input=false
+
+      - name: Terraform Destroy
+        run: terraform -chdir=env/dev destroy -auto-approve -var-file="dev.tfvars"

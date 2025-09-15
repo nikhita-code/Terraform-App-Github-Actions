@@ -1,5 +1,3 @@
-
-
 name: Dev env infra
 
 on:
@@ -7,8 +5,8 @@ on:
     branches:
       - dev
   pull_request:
-      branches:
-        - main
+    branches:
+      - main
 
 jobs:
   terraform-plan:
@@ -44,16 +42,6 @@ jobs:
           .terraform.lock.hcl
           EOF
 
-      - name: Resolve .gitignore conflict automatically
-        if: failure()
-        run: |
-          if git status | grep -q '.gitignore'; then
-            git rm .gitignore || true
-            git add .gitignore || true
-            git cherry-pick --continue || true
-          fi
-
-          
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -67,24 +55,19 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: |
-          set -o pipefail
-          terraform -chdir=env/dev init -input=false | tee /dev/stdout
+        run: terraform -chdir=env/dev init -input=false
 
       - name: Terraform Plan
         id: plan
-        run: |
-          set -o pipefail
-          terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
-         
+        run: terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
 
-      - name: upload terraform plan artifact
+      - name: Upload Terraform plan artifact
         uses: actions/upload-artifact@v4
         with: 
-           name: terraform-plan-dev-${{ github.run_id }}
-           path: env/dev/tfplan
-           retention-days: 1
-           if-no-files-found: ignore 
+          name: terraform-plan-dev-${{ github.run_id }}
+          path: env/dev/tfplan
+          retention-days: 1
+          if-no-files-found: ignore 
 
       - name: Raise PR after successful Terraform plan
         if: success()
@@ -103,16 +86,15 @@ jobs:
             - Run ID: ${{ github.run_id }}
           base: main
       
-jobs:
-    terraform apply:
-     if: github.event_name =='pull_request' && github.base_ref == 'main'
-     runs-on: ubuntu-latest
-     needs: terraform-plan
-     permissions:
+  terraform-apply:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    permissions:
       contents: read
       pull-requests: write
 
-      steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -139,6 +121,3 @@ jobs:
 
       - name: Terraform Apply
         run: terraform -chdir=env/dev apply -input=false tfplan
-      
-     
-     

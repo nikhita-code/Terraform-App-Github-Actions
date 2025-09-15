@@ -8,7 +8,12 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:   # 👈 manual trigger
+    inputs:
+      confirm_destroy:
+        description: "Type 'yes' to confirm destroying infrastructure"
+        required: true
+        default: "yes"
   
 jobs:
  terraform-plan:
@@ -98,8 +103,7 @@ jobs:
 
 
  terraform-destroy:
-    if: github.event_name == 'workflow_dispatch'
-    needs: terraform-apply
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm_destroy == 'yes'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -109,21 +113,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
-
+          
       - name: Terraform Init
         run: terraform init
-
+        
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -var-file="dev.tfvars"

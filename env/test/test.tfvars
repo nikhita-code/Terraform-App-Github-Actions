@@ -1,5 +1,2 @@
-key_pair_nm = "taerraform-demo-codespace"
-ami = "ami-0360c520857e3138f"
-instance_type  = "t2.micro"
-vpc_id = "vpc-0c410271af642eca6"
-subnet_id = "subnet-0c3b3324f58c6a8a7"
+#s3_bucket
+bucket_name = "aws-s3-14567"

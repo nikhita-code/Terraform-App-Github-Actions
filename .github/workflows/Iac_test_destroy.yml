@@ -1,5 +1,5 @@
 
-name: Test env infra for terraform destroy!!
+name: Test env infra for terraform destroy!! 
  
 on:
   push: 
@@ -12,7 +12,7 @@ on:
   
 jobs:
  terraform-plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest #github-actions runners
     
     defaults:
        run: 

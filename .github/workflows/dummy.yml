@@ -53,8 +53,8 @@ jobs:
             Please review before merging to `main` for apply.
           base: main
           add-paths:
-            - env/dev/*.tf
-            - env/dev/*.tfvars
+             env/dev/*.tf
+             env/dev/*.tfvars
           
   terraform-apply:
     if: github.ref == 'refs/heads/main'

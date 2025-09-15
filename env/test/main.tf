@@ -10,4 +10,5 @@ module "custom_modules" {
   ami = var.ami
   instance_type = var.instance_type
   key_pair_nm = var.key_pair_nm
+  vpc_id = var.vpc_id
 }

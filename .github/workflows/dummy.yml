@@ -46,7 +46,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Terraform apply request for dev"
           branch: infra/dev-plan-${{ github.run_id }}
-          delete-branch: true
+          #delete-branch: true
           title: "Terraform Apply PR (Dev → Main)"
           body: |
             Terraform plan completed successfully.

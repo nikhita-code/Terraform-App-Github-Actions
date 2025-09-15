@@ -70,7 +70,7 @@ jobs:
             - Run ID: ${{ github.run_id }}
           base: main
           exclude: |
-            **/.terraform/**
-            **/*.tfstate
-            **/*.tfstate.*
-            **/*tfplan
+             env/dev/.terraform/**
+             env/dev/*.tfstate
+             env/dev/*.tfstate.*
+             env/dev/*tfplan

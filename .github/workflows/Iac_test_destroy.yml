@@ -1,8 +1,8 @@
 
 name: Test env infra for terraform destroy!! 
- 
+  
 on:
-  push:  # trigger
+  push:  # trigger  
     branches:
       - dev
       - main

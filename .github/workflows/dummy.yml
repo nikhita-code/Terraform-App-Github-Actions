@@ -6,7 +6,7 @@ on:
   push:
     branches:
       - dev
-    pull_request:
+  pull_request:
       branches:
         - main
 
@@ -103,9 +103,9 @@ jobs:
             - Run ID: ${{ github.run_id }}
           base: main
       
-  jobbs:
-     terraform apply:
-     if: github.event_name =='pull_request' && github.base == 'main'
+jobs:
+    terraform apply:
+     if: github.event_name =='pull_request' && github.base_ref == 'main'
      runs-on: ubuntu-latest
      needs: terraform-plan
      permissions:

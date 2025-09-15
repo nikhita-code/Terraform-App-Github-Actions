@@ -44,3 +44,25 @@ jobs:
         id: plan
         run: terraform plan -var-file="dev.tfvars" -out=tfplan
 
+      - name: Upload Terraform plan artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: terraform-plan-dev
+          path: env/dev/tfplan
+          retention-days: 1
+          if-no-files-found: ignore 
+          
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Terraform changes"
+          branch: dev
+          base: main
+          title: "Terraform Plan results from dev"
+          body: |
+            This PR was automatically created by GitHub Actions.
+            It contains Terraform changes from the `dev` branch.
+          add-paths: |
+              env/dev/*.tf
+              env/dev/*.tfvars

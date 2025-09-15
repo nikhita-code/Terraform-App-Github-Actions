@@ -1,0 +1,101 @@
+
+name: Test env infra for terraform destroy!!
+ 
+on:
+  push: 
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+  
+jobs:
+ terraform-plan:
+    runs-on: ubuntu-latest
+    
+    defaults:
+       run: 
+         shell: bash
+         working-directory: ./env/test
+
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        id: init
+        run: terraform  init 
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var-file="test.tfvars" -out=tfplan-${{ github.run_id }}  
+        
+
+      - name: Upload Terraform plan artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: terraform-plan-test
+          path: env/test/tfplan-${{ github.run_id }} 
+          retention-days: 1
+          if-no-files-found: ignore 
+          
+      
+          
+ terraform-apply-destroy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+  #  permissions:
+   #   contents: read
+   #   pull-requests: write
+   
+      # Configure required reviewers in GitHub environment settings
+    defaults:
+       run: 
+         shell: bash
+         working-directory: ./env/test
+         
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init 
+        
+      - name: Download Terraform plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-test
+          path: env/test
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve  tfplan-${{ github.run_id }}
+              
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var-file="test.tfvars"
+

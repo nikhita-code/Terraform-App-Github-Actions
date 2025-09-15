@@ -1,18 +1,67 @@
-name: Infra pipeline for dev env
-
+name: Dev env infra
+ 
 on:
   push:
     branches:
       - dev
+      - push
+  pull_request:
+    branches:
       - main
-#  pull_request:
-  #    branches:
-   #   - main
 
 jobs:
-  terraform-dev:
-    if: github.ref == 'refs/heads/dev'
+  terraform:
     runs-on: ubuntu-latest
+
+    env:
+      tf_actions_working_dir: env/dev
+    
+    defaults:
+       run: 
+         shell: bash
+         working-directory: ./env/dev
+
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        id: init
+        run: terraform  init 
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var-file="dev.tfvars" -out=tfplan-${{ github.run_id }}  
+        
+
+      - name: Upload Terraform plan artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: terraform-plan-dev
+          path: env/dev/tfplan-${{ github.run_id }} 
+          retention-days: 1
+          if-no-files-found: ignore 
+          
+ terraform-apply:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+   
+      # Configure required reviewers in GitHub environment settings
 
     steps:
       - name: Checkout code
@@ -21,9 +70,23 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Download Terraform plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-dev
+          path: env/dev
+          
       - name: Terraform Init
-        run: terraform -chdir=env/dev init -input=false | tee /dev/stdout
+        run: terraform init 
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve  tfplan-${{ github.run_id }}

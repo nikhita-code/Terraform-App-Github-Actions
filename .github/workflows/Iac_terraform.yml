@@ -99,6 +99,7 @@ jobs:
 
  terraform-destroy:
     if: github.event_name == 'workflow_dispatch'
+    needs: terraform-apply
     runs-on: ubuntu-latest
     defaults:
       run:

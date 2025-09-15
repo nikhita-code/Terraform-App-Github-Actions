@@ -1,8 +1,8 @@
 
-name: Test env infra for terraform destroy!!
+name: Test env infra for terraform destroy!! 
  
 on:
-  push: 
+  push:  # trigger
     branches:
       - dev
       - main
@@ -12,7 +12,7 @@ on:
   
 jobs:
  terraform-plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest #github-actions runners
     
     defaults:
        run: 
@@ -39,7 +39,7 @@ jobs:
         id: init
         run: terraform  init 
 
-      - name: Terraform Plan
+      - name: Terraform Plan #terraform plan
         id: plan
         run: terraform plan -var-file="test.tfvars" -out=tfplan-${{ github.run_id }}  
         

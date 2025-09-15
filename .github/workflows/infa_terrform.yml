@@ -14,6 +14,10 @@ jobs:
 
     env:
       tf_actions_working_dir: env/dev
+      
+    permissions:
+      contents: write
+      pull-requests: write
     
     defaults:
        run: 

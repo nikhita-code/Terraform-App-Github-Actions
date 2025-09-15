@@ -20,7 +20,29 @@ jobs:
     steps: 
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Ensure .gitignore exists
+        run: |
+          cat << 'EOF' > .gitignore
+          # Terraform local files
+          **/.terraform/*
+          *.tfstate
+          *.tfstate.*
+          *.tfvars
+          crash.log
+          override.tf
+          override.tf.json
+          *_override.tf
+          *_override.tf.json
 
+          # Terraform plan files
+          tfplan
+          *.tfplan
+
+          # Provider binaries
+          .terraform.lock.hcl
+          EOF
+          
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -69,8 +91,4 @@ jobs:
             - Workflow: ${{ github.workflow }}
             - Run ID: ${{ github.run_id }}
           base: main
-          exclude: |
-             env/dev/.terraform/**
-             env/dev/*.tfstate
-             env/dev/*.tfstate.*
-             env/dev/*tfplan
+      

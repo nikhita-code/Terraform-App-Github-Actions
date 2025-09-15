@@ -20,28 +20,6 @@ jobs:
     steps: 
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Ensure .gitignore exists
-        run: |
-          cat << 'EOF' > .gitignore
-          # Terraform local files
-          **/.terraform/*
-          *.tfstate
-          *.tfstate.*
-          *.tfvars
-          crash.log
-          override.tf
-          override.tf.json
-          *_override.tf
-          *_override.tf.json
-
-          # Terraform plan files
-          tfplan
-          *.tfplan
-
-          # Provider binaries
-          .terraform.lock.hcl
-          EOF
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -59,16 +37,7 @@ jobs:
         run: terraform -chdir=env/dev init -input=false
 
       - name: Terraform Plan
-        id: plan
         run: terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
-
-      - name: Upload Terraform plan artifact
-        uses: actions/upload-artifact@v4
-        with: 
-          name: terraform-plan-dev
-          path: env/dev/tfplan
-          retention-days: 1
-          if-no-files-found: ignore 
 
       - name: Raise PR after successful Terraform plan
         if: success()
@@ -82,17 +51,13 @@ jobs:
           body: |
             Terraform plan completed successfully.
             Please review before merging to `main` for apply.
-
-            - Workflow: ${{ github.workflow }}
-            - Run ID: ${{ github.run_id }}
           base: main
-          add-paths: |
-              env/dev/*.tf
-              env/dev/*.tfvars
-
+          add-paths:
+            - env/dev/*.tf
+            - env/dev/*.tfvars
           
   terraform-apply:
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -117,11 +82,13 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=env/dev init -input=false
 
-      - name: Download Terraform Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan-dev
-          path: env/dev/
+      - name: Terraform Plan (re-run in main before apply)
+        run: terraform -chdir=env/dev plan -input=false -var-file="dev.tfvars" -out=tfplan
 
       - name: Terraform Apply
         run: terraform -chdir=env/dev apply -input=false tfplan
+
+      # Optional destroy step (run manually, not on every merge)
+      - name: Terraform Destroy
+        if: github.event_name == 'workflow_dispatch'
+        run: terraform -chdir=env/dev destroy -auto-approve -var-file="dev.tfvars"

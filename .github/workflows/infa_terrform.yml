@@ -28,4 +28,4 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform - init -input=false
+        run: terraform - init 

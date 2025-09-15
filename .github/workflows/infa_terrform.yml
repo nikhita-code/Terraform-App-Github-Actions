@@ -1,5 +1,5 @@
-name: Dev env infra
- 
+name: Dev env infra (Pr raise for apply)
+
 on:
   push:
     branches:

@@ -12,3 +12,7 @@ variable "instance_type" {
 variable "key_pair_nm" {
    type = string
 }
+
+variable "vpc_id" {
+   type = string
+}

@@ -1,7 +1,7 @@
 name: Dev env infra
  
 on:
-  push:
+  push: 
     branches:
       - dev
       - main

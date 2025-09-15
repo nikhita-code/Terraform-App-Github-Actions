@@ -1,6 +1,6 @@
 
 name: Test env infra for terraform destroy!! 
- 
+  
 on:
   push:  # trigger  
     branches:
